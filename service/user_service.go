@@ -1,9 +1,10 @@
 package service
 
 import (
+	"douyinapp/entity"
 	"douyinapp/repository"
 )
 
-func UserInfo(user_id int64) (repository.User, error) {
-	return repository.NewUserDaoInstance().QueryUserInfoById(user_id)
+func UserInfo(userId int64) (entity.User, error) {
+	return repository.NewUserDaoInstance().QueryUserInfoById(userId)
 }
