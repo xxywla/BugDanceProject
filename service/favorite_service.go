@@ -29,6 +29,8 @@ func FavoriteListByUserId(userId int64) []entity.VideoVo {
 
 	videoDao := repository.NewVideoDaoInstance()
 
+	commentDao := repository.NewCommentDaoInstance()
+
 	// 获取用户喜欢的视频Id列表
 	videoIdList := favoriteDao.FavoriteList(userId)
 
@@ -50,13 +52,15 @@ func FavoriteListByUserId(userId int64) []entity.VideoVo {
 		// 获取视频作者的信息
 
 		// 获取视频的点赞数
+		videoVo.FavoriteCount = favoriteDao.QueryVideoFavoriteCount(videoId)
 
 		// 获取视频的评论数
+		videoVo.CommentCount = commentDao.QueryVideoCommentCount(videoId)
 
 		// 当前用户一定已经点赞了
 		videoVo.IsFavorite = true
 
-		videoVoList = append(videoVoList)
+		videoVoList = append(videoVoList, videoVo)
 	}
 
 	return videoVoList
