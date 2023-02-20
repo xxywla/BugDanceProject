@@ -2,8 +2,7 @@ package repository
 
 import (
 	"douyinapp/entity"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	"fmt"
 	"sync"
 )
 
@@ -24,12 +23,38 @@ func NewUserDaoInstance() *UserDao {
 
 // QueryUserInfoById 根据用户Id查询用户信息
 func (*UserDao) QueryUserInfoById(userId int64) (entity.User, error) {
-	dsn := "root:123456@tcp(127.0.0.1:3306)/db_douyin?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return entity.User{}, err
-	}
 	var user entity.User
 	db.First(&user, userId)
+	return user, nil
+}
+
+// Yimin code
+
+func (*UserDao) CreateUser(user *entity.User) error {
+	tx := db.Begin()
+	if err := tx.Create(user).Error; err != nil {
+		fmt.Println("failed to create user info: ", err)
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
+func (*UserDao) GetUserInfoById(id int64) (*entity.User, error) {
+	user := &entity.User{Id: id}
+	if err := db.First(&user).Error; err != nil {
+		fmt.Println("user not found: ", err)
+		return nil, err
+	}
+	return user, nil
+}
+
+func (*UserDao) GetUserInfoByName(username string) (*entity.User, error) {
+	user := &entity.User{}
+	if err := db.Where("name = ?", username).First(&user).Error; err != nil {
+		fmt.Println("user not found: ", err)
+		return nil, err
+	}
 	return user, nil
 }
