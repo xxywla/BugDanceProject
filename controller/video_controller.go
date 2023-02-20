@@ -52,7 +52,7 @@ func PublishAction(c *gin.Context) {
 
 	// 调用 service 把视频信息保存到数据库
 	var video entity.Video
-	video.PlayUrl = "./" + file.Filename
+	video.PlayUrl = "./public/" + file.Filename
 	video.Title = c.PostForm("title")
 	video.CoverUrl = "www.picture.com"
 
@@ -72,6 +72,7 @@ func PublishAction(c *gin.Context) {
 }
 
 // Yimin code
+
 type PublishListResponse struct {
 	StatusCode int32           `json:"status_code"`
 	StatusMsg  string          `json:"status_msg"`

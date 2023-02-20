@@ -192,10 +192,18 @@ type FavoriteActionResponse struct {
 }
 
 // FavoriteAction 赞操作
-func FavoriteAction(userId int64, videoId int64, actionType int32) FavoriteActionResponse {
+func FavoriteAction(c *gin.Context) {
 
-	service.FavoriteAction(userId, videoId, actionType)
-	return FavoriteActionResponse{0, "成功操作"}
+	videoId, _ := strconv.ParseInt(c.PostForm("video_id"), 10, 64)
+	actionType, _ := strconv.ParseInt(c.PostForm("action_type"), 10, 32)
+	token := c.PostForm("token")
+
+	session := sessions.Default(c)
+
+	userId := session.Get(token).(int64)
+
+	service.FavoriteAction(userId, videoId, int32(actionType))
+	c.JSON(200, FavoriteActionResponse{0, "成功操作"})
 }
 
 // FavoriteList all users have same favorite video list
