@@ -13,5 +13,5 @@ func TestFeeding(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	feedResp.Value("status_code").Number().IsEqual(0)
+	feedResp.Value("status_code").Number().Equal(0)
 }

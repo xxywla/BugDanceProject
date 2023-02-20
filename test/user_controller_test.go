@@ -26,7 +26,7 @@ func TestRegisterLoginInfo(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	registerResp.Value("status_code").Number().IsEqual(0)
+	registerResp.Value("status_code").Number().Equal(0)
 	registerResp.Value("user_id").Number().Gt(0)
 	registerResp.Value("token").String().Length().Gt(0)
 
@@ -36,7 +36,7 @@ func TestRegisterLoginInfo(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	loginResp.Value("status_code").Number().IsEqual(0)
+	loginResp.Value("status_code").Number().Equal(0)
 	loginResp.Value("user_id").Number().Gt(0)
 	loginResp.Value("token").String().Length().Gt(0)
 
@@ -45,7 +45,7 @@ func TestRegisterLoginInfo(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-	infoResp.Value("status_code").Number().IsEqual(0)
-	infoResp.Value("status_msg").String().IsEqual("")
-	infoResp.Value("user").Object().Value("name").String().IsEqual(registerValue)
+	infoResp.Value("status_code").Number().Equal(0)
+	infoResp.Value("status_msg").String().Equal("")
+	infoResp.Value("user").Object().Value("name").String().Equal(registerValue)
 }
