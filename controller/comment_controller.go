@@ -3,8 +3,11 @@ package controller
 import (
 	"douyinapp/entity"
 	"douyinapp/service"
-	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
+
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
 type CommentListResponse struct {
@@ -21,25 +24,50 @@ type CommentActionResponse struct {
 
 // CommentAction no practical effect, just check if token is valid
 func CommentAction(c *gin.Context) {
-	token := c.Query("token")
-	actionType := c.Query("action_type")
+	token := c.PostForm("token")
 
-	if user, exist := usersLoginInfo[token]; exist {
-		if actionType == "1" {
-			text := c.Query("comment_text")
-			c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 0,
-				StatusMsg: "评论成功",
-				Comment: entity.Comment{
-					Id:         1,
-					UserId:     user,
-					Content:    text,
-					CreateDate: "05-01",
-				}})
+	userDemo := entity.User{Id: 1,
+		Name:     "zhanglei",
+		Password: "",
+		Avatar:   ""}
+
+	session := sessions.Default(c)
+	session.Set(token, userDemo)
+	session.Save()
+	user := session.Get(token)
+
+	if user == nil {
+		c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "未登录或登陆过期，请先登录"})
+		return
+	}
+
+	actionType := c.PostForm("action_type")
+	if actionType == "1" {
+		videoId, _ := strconv.ParseInt(c.PostForm("video_id"), 10, 64)
+		commentText := c.PostForm("comment_text")
+		comment, err := service.SaveComment(videoId, user.(entity.User), commentText)
+		if err != nil {
+			c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "评论失败"})
 			return
 		}
-		c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 0})
+		c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 0,
+			StatusMsg: "评论成功",
+			Comment:   *comment})
+		return
 	} else {
-		c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "用户不存在"})
+		if actionType == "2" {
+			commentId, _ := strconv.ParseInt(c.PostForm("comment_id"), 10, 64)
+			err := service.DeleteComment(commentId)
+			if err != nil {
+				c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "删除评论失败"})
+				return
+			} else {
+				c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 0, StatusMsg: "删除评论成功"})
+				return
+			}
+		} else {
+			c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "action_type不合法"})
+		}
 	}
 }
 

@@ -3,10 +3,12 @@ package controller
 import (
 	"douyinapp/entity"
 	"douyinapp/service"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
 //type UserResponse struct {
@@ -82,33 +84,35 @@ func Register(c *gin.Context) {
 			StatusCode: 1,
 			StatusMsg:  "Failed to create token",
 		})
+		return
+	}
+
+	if _, err := service.GetUserInfoByName(username); err == nil {
+		c.JSON(http.StatusOK, UserLoginResponse{
+			StatusCode: 1,
+			StatusMsg:  "User already exist",
+		})
+		return
+	}
+
+	if user, err := service.CreateUser(username, password); err != nil || user == nil {
+		c.JSON(http.StatusOK, UserLoginResponse{
+			StatusCode: 1,
+			StatusMsg:  "Failed to create account",
+		})
 	} else {
-		if _, err := service.GetUserInfoByName(username); err != nil {
-			if user, err := service.CreateUser(username, password); err != nil || user == nil {
-				c.JSON(http.StatusOK, UserLoginResponse{
-					StatusCode: 1,
-					StatusMsg:  "Failed to create account",
-				})
-			} else {
-				session := sessions.Default(c)
-				session.Options(sessions.Options{
-					Path:   "/",
-					MaxAge: int(3600),
-				})
-				session.Set(token, 1)
-				session.Save()
-				c.JSON(http.StatusOK, UserLoginResponse{
-					StatusCode: 0,
-					UserId:     user.Id,
-					Token:      token,
-				})
-			}
-		} else {
-			c.JSON(http.StatusOK, UserLoginResponse{
-				StatusCode: 1,
-				StatusMsg:  "User already exist",
-			})
-		}
+		session := sessions.Default(c)
+		session.Options(sessions.Options{
+			Path:   "/",
+			MaxAge: int(3600),
+		})
+		session.Set(token, user)
+		session.Save()
+		c.JSON(http.StatusOK, UserLoginResponse{
+			StatusCode: 0,
+			UserId:     user.Id,
+			Token:      token,
+		})
 	}
 }
 
@@ -122,35 +126,36 @@ func Login(c *gin.Context) {
 			StatusCode: 1,
 			StatusMsg:  "Failed to create token",
 		})
+		return
+	}
+
+	if err := service.VerifyAccount(username, password); err != nil {
+		c.JSON(http.StatusOK, UserLoginResponse{
+			StatusCode: 1,
+			StatusMsg:  "Wrong username or password",
+		})
+		return
+	}
+
+	if user, err := service.GetUserInfoByName(username); err != nil || user == nil {
+		c.JSON(http.StatusOK, UserLoginResponse{
+			StatusCode: 1,
+			StatusMsg:  "Failed to login",
+		})
 	} else {
 		session := sessions.Default(c)
 		session.Options(sessions.Options{
 			Path:   "/",
 			MaxAge: int(3600),
 		})
-		session.Set(token, 1)
+		session.Set(token, user)
+		fmt.Println(session.Get(token))
 		session.Save()
-
-		if err := service.VerifyAccount(username, password); err != nil {
-			c.JSON(http.StatusOK, UserLoginResponse{
-				StatusCode: 1,
-				StatusMsg:  "Wrong username or password",
-			})
-		} else {
-			user, err := service.GetUserInfoByName(username)
-			if err != nil || user == nil {
-				c.JSON(http.StatusOK, UserLoginResponse{
-					StatusCode: 1,
-					StatusMsg:  "Failed to login",
-				})
-			} else {
-				c.JSON(http.StatusOK, UserLoginResponse{
-					StatusCode: 0,
-					UserId:     user.Id,
-					Token:      token,
-				})
-			}
-		}
+		c.JSON(http.StatusOK, UserLoginResponse{
+			StatusCode: 0,
+			UserId:     user.Id,
+			Token:      token,
+		})
 	}
 }
 
@@ -170,20 +175,20 @@ func UserInfo(c *gin.Context) {
 			StatusCode: 1,
 			StatusMsg:  "Cannot parse user_id or token",
 		})
-	} else {
-		if user, err := service.GetUserInfoById(id); err != nil || user == nil {
-			c.JSON(http.StatusOK, UserResponse{
-				StatusCode: 1,
-				StatusMsg:  "User doesn't exist",
-			})
-		} else {
-			c.JSON(http.StatusOK, UserResponse{
-				StatusCode: 0,
-				User:       *user,
-			})
-		}
+		return
 	}
 
+	if user, err := service.GetUserInfoById(id); err != nil || user == nil {
+		c.JSON(http.StatusOK, UserResponse{
+			StatusCode: 1,
+			StatusMsg:  "User doesn't exist",
+		})
+	} else {
+		c.JSON(http.StatusOK, UserResponse{
+			StatusCode: 0,
+			User:       *user,
+		})
+	}
 }
 
 type FavoriteActionResponse struct {

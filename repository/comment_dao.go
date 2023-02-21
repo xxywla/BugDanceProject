@@ -2,7 +2,6 @@ package repository
 
 import (
 	"douyinapp/entity"
-	"fmt"
 	"sync"
 )
 
@@ -29,16 +28,18 @@ func (*CommentDao) QueryVideoCommentCount(videoId int64) int64 {
 }
 
 // AddComment 评论表添加一项数据
-func (*CommentDao) AddComment(videoId int64, userId int64, content string, creatDate string) error {
-	fav := &entity.Comment{VideoId: videoId, UserId: userId, Content: content, CreateDate: creatDate}
-	db.Create(fav)
-	fmt.Println(fav.Id)
-	return nil
+func (*CommentDao) AddComment(comment *entity.Comment) (*entity.Comment, error) {
+	err := db.Create(comment).Error
+	if err != nil {
+		return nil, err
+	}
+	return comment, nil
 }
 
 // DeleteComment 在评论表删除一条数据
-func (*CommentDao) DeleteComment(videoId int64, userId int64, content string, creatDate string) {
-	db.Delete(entity.Comment{}, "video_id = ? and user_id = ? and content = ? and create_date = ?", videoId, userId, content, creatDate)
+func (*CommentDao) DeleteComment(commentId int64) error {
+	err := db.Delete(entity.Comment{}, "id = ?", commentId).Error
+	return err
 }
 
 // CommentList 根据用户Id获取该用户评论的所有视频Id

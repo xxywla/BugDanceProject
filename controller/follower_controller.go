@@ -3,8 +3,8 @@ package controller
 import (
 	"douyinapp/entity"
 	"douyinapp/service"
+
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type FollowerListResponse struct {
@@ -21,24 +21,24 @@ type FollowerActionResponse struct {
 
 // FollowerAction no practical effect, just check if token is valid
 func FollowerAction(c *gin.Context) {
-	token := c.Query("token")
-	actionType := c.Query("action_type")
+	// token := c.Query("token")
+	// actionType := c.Query("action_type")
 
-	if user, exist := usersLoginInfo[token]; exist {
-		if actionType == "1" {
-			c.JSON(http.StatusOK, FollowerActionResponse{StatusCode: 0,
-				StatusMsg: "评论成功",
-				Follower: entity.Follower{
-					Id:         1,
-					UserId:     user,
-					FollowerId: 10,
-				}})
-			return
-		}
-		c.JSON(http.StatusOK, FollowerActionResponse{StatusCode: 0})
-	} else {
-		c.JSON(http.StatusOK, FollowerActionResponse{StatusCode: 1, StatusMsg: "用户不存在"})
-	}
+	// if user, exist := usersLoginInfo[token]; exist {
+	// 	if actionType == "1" {
+	// 		c.JSON(http.StatusOK, FollowerActionResponse{StatusCode: 0,
+	// 			StatusMsg: "评论成功",
+	// 			Follower: entity.Follower{
+	// 				Id:         1,
+	// 				UserId:     user,
+	// 				FollowerId: 10,
+	// 			}})
+	// 		return
+	// 	}
+	// 	c.JSON(http.StatusOK, FollowerActionResponse{StatusCode: 0})
+	// } else {
+	// 	c.JSON(http.StatusOK, FollowerActionResponse{StatusCode: 1, StatusMsg: "用户不存在"})
+	// }
 }
 
 // FollowerList all videos have same demo comment list

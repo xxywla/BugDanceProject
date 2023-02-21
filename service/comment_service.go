@@ -3,6 +3,8 @@ package service
 import (
 	"douyinapp/entity"
 	"douyinapp/repository"
+	"fmt"
+	"time"
 )
 
 // CommentList 获取指定用户发布的视频列表
@@ -10,11 +12,21 @@ func CommentList(userId int64) ([]*entity.Comment, error) {
 	return repository.NewCommentDaoInstance().CommentList(userId), nil
 }
 
-// SaveComment 把视频信息保存到数据库
-func SaveComment(comment entity.Comment) error {
-	err := repository.NewCommentDaoInstance().AddComment(comment.VideoId, comment.UserId, comment.Content, comment.CreateDate)
+// 保存评论
+func SaveComment(videoId int64, user entity.User, commentText string) (*entity.Comment, error) {
+	createDate := time.Now().Format("01-02")
+	comment := &entity.Comment{VideoId: videoId, UserId: user.Id, Content: commentText, CreateDate: createDate}
+
+	comment, err := repository.NewCommentDaoInstance().AddComment(comment)
 	if err != nil {
-		return err
+		fmt.Printf("保存评论失败: %s", err)
+		return nil, err
 	}
-	return nil
+	return comment, nil
+}
+
+// 删除评论
+func DeleteComment(commentId int64) error {
+	err := repository.NewCommentDaoInstance().DeleteComment(commentId)
+	return err
 }
