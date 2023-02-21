@@ -36,7 +36,7 @@ func (*FollowerDao) AddFollower(userId int64, followerId int64) error {
 }
 
 // DeleteFollower 在关注表删除一条数据
-func (*FollowerDao) DeleteFollower(userId int64, followerId int64) {
+func (*FollowerDao) DeleteFollower(userId int64, followerId int64) error {
 
 	dsn := "root:123456@tcp(127.0.0.1:3306)/db_douyin?charset=utf8mb4&parseTime=True&loc=Local"
 
@@ -44,6 +44,7 @@ func (*FollowerDao) DeleteFollower(userId int64, followerId int64) {
 
 	db.Delete(entity.Follower{}, "user_id = ? and follower_id = ?", userId, followerId)
 
+	return nil
 }
 
 // FollowerList 根据用户Id获取该用户的所有关注者Id

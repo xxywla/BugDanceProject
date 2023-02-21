@@ -36,14 +36,15 @@ func (*CommentDao) AddComment(videoId int64, userId int64, content string, creat
 }
 
 // DeleteComment 在评论表删除一条数据
-func (*CommentDao) DeleteComment(videoId int64, userId int64, content string, creatDate string) {
+func (*CommentDao) DeleteComment(commentId int64) error {
 
 	dsn := "root:123456@tcp(127.0.0.1:3306)/db_douyin?charset=utf8mb4&parseTime=True&loc=Local"
 
 	db, _ := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
-	db.Delete(entity.Comment{}, "video_id = ? and user_id = ? and content = ? and create_date = ?", videoId, userId, content, creatDate)
+	db.Delete(entity.Comment{}, "comment_id = ?", commentId)
 
+	return nil
 }
 
 // CommentList 根据用户Id获取该用户评论的所有视频Id
@@ -54,7 +55,7 @@ func (*CommentDao) CommentList(userId int64) []*entity.Comment {
 
 	commentList := make([]*entity.Comment, 0)
 
-	db.Where("user_id = ?", userId).Find(&commentList)
+	db.Where("user_id = ? ORDER BY 'create_date'", userId).Find(&commentList)
 
 	return commentList
 }
