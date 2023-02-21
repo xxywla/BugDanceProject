@@ -57,8 +57,12 @@ func GetUserInfoById(id int64) (*entity.UserVo, error) {
 
 func GetUserInfoByName(username string) (*entity.UserVo, error) {
 	user, err := repository.NewUserDaoInstance().GetUserInfoByName(username)
-	userVo := user2Vo(user)
-	return userVo, err
+	if err != nil || user == nil {
+		return nil, err
+	} else {
+		userVo := user2Vo(user)
+		return userVo, err
+	}
 }
 
 func EncryptPassword(password string) (string, error) {
