@@ -18,7 +18,8 @@ func SaveComment(videoId int64, user entity.User, commentText string) (*entity.C
 	comment := &entity.Comment{VideoId: videoId, UserId: user.Id, Content: commentText, CreateDate: createDate}
 
 	comment, err := repository.NewCommentDaoInstance().AddComment(comment)
-	commentVo := entity.CommentVo{Id: comment.Id}
+	userVo := user2Vo(&user)
+	commentVo := entity.CommentVo{Id: comment.Id, User: *userVo, Content: commentText, CreateDate: createDate}
 	if err != nil {
 		fmt.Printf("保存评论失败: %s", err)
 		return nil, err

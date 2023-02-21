@@ -45,14 +45,14 @@ func CommentAction(c *gin.Context) {
 	if actionType == "1" {
 		videoId, _ := strconv.ParseInt(c.PostForm("video_id"), 10, 64)
 		commentText := c.PostForm("comment_text")
-		comment, err := service.SaveComment(videoId, user.(entity.User), commentText)
+		commentVo, err := service.SaveComment(videoId, user.(entity.User), commentText)
 		if err != nil {
 			c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "评论失败"})
 			return
 		}
 		c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 0,
 			StatusMsg: "评论成功",
-			Comment:   *comment})
+			Comment:   *commentVo})
 		return
 	} else {
 		if actionType == "2" {
