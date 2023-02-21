@@ -4,11 +4,12 @@ import (
 	"douyinapp/entity"
 	"douyinapp/service"
 	"fmt"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
 //type PublishListResponse struct {
@@ -111,8 +112,6 @@ func Feed(c *gin.Context) {
 		Path:   "/",
 		MaxAge: int(3600),
 	})
-	session.Set(token, 1)
-	session.Save()
 	flag := session.Get(token)
 	if err != nil {
 		fmt.Println(err)

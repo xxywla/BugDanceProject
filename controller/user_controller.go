@@ -106,7 +106,7 @@ func Register(c *gin.Context) {
 			Path:   "/",
 			MaxAge: int(3600),
 		})
-		session.Set(token, userVo)
+		session.Set(token, userVo.Id)
 		session.Save()
 		c.JSON(http.StatusOK, UserLoginResponse{
 			StatusCode: 0,
@@ -148,7 +148,7 @@ func Login(c *gin.Context) {
 			Path:   "/",
 			MaxAge: int(3600),
 		})
-		session.Set(token, userVo)
+		session.Set(token, userVo.Id)
 		fmt.Println(session.Get(token))
 		session.Save()
 		c.JSON(http.StatusOK, UserLoginResponse{
@@ -163,12 +163,10 @@ func UserInfo(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Query("user_id"), 10, 64)
 	token := c.Query("token")
 	session := sessions.Default(c)
-	// session.Options(sessions.Options{
-	// 	Path:   "/",
-	// 	MaxAge: int(3600),
-	// })
-	session.Set(token, 1)
-	session.Save()
+	session.Options(sessions.Options{
+		Path:   "/",
+		MaxAge: int(3600),
+	})
 	flag := session.Get(token)
 	if err != nil || flag == nil {
 		c.JSON(http.StatusOK, UserResponse{
