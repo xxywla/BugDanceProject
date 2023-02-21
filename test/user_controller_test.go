@@ -41,7 +41,7 @@ func TestRegisterLoginInfo(t *testing.T) {
 	loginResp.Value("token").String().Length().Gt(0)
 
 	infoResp := e.GET("/douyin/user/").
-		WithQuery("user_id", int64(loginResp.Value("user_id").Number().Raw())).WithQuery("token", loginResp.Value("token").String()).
+		WithQuery("user_id", int64(loginResp.Value("user_id").Number().Raw())).WithQuery("token", loginResp.Value("token").String().Raw()).
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()

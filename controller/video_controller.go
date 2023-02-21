@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -35,8 +34,6 @@ type PublishActionResponse struct {
 // PublishAction 上传视频
 func PublishAction(c *gin.Context) {
 
-	session := sessions.Default(c)
-
 	file, err := c.FormFile("data")
 
 	if err != nil {
@@ -59,9 +56,12 @@ func PublishAction(c *gin.Context) {
 
 	token := c.PostForm("token")
 
-	tmp := session.Get(token)
-	fmt.Println(tmp)
-	video.AuthorId = int64(session.Get(token).(int))
+	tokenClaims, err := ParseToken(token)
+	if err != nil || tokenClaims == nil {
+		c.JSON(200, &PublishActionResponse{StatusCode: 1, StatusMsg: "token获取失败"})
+		return
+	}
+	video.AuthorId = tokenClaims.UserId
 
 	err = service.SaveVideo(video)
 	if err != nil {
@@ -106,39 +106,25 @@ func PublishList(c *gin.Context) {
 
 func Feed(c *gin.Context) {
 	latestTime, err := strconv.ParseInt(c.Query("latest_time"), 10, 64)
-	token := c.Query("token")
-	session := sessions.Default(c)
-	session.Options(sessions.Options{
-		Path:   "/",
-		MaxAge: int(3600),
-	})
-	flag := session.Get(token)
+
 	if err != nil {
 		fmt.Println(err)
 		latestTime = time.Now().Unix()
 	}
-	if flag == nil {
+
+	videos, nextTime, err := service.Feed(latestTime)
+	if err != nil || videos == nil || len(videos) == 0 {
 		c.JSON(http.StatusOK, FeedResponse{
-			StatusCode: 1,
-			StatusMsg:  "Cannot parse token",
+			StatusCode: 0,
+			StatusMsg:  "No videos found",
 			VideoList:  nil,
 			NextTime:   time.Now().Unix(),
 		})
 	} else {
-		videos, nextTime, err := service.Feed(latestTime)
-		if err != nil || videos == nil || len(videos) == 0 {
-			c.JSON(http.StatusOK, FeedResponse{
-				StatusCode: 0,
-				StatusMsg:  "No videos found",
-				VideoList:  nil,
-				NextTime:   time.Now().Unix(),
-			})
-		} else {
-			c.JSON(http.StatusOK, FeedResponse{
-				StatusCode: 0,
-				VideoList:  videos,
-				NextTime:   nextTime,
-			})
-		}
+		c.JSON(http.StatusOK, FeedResponse{
+			StatusCode: 0,
+			VideoList:  videos,
+			NextTime:   nextTime,
+		})
 	}
 }

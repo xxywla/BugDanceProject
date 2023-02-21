@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,15 +25,15 @@ type CommentActionResponse struct {
 // CommentAction no practical effect, just check if token is valid
 func CommentAction(c *gin.Context) {
 	token := c.Query("token")
-	session := sessions.Default(c)
-	userId := session.Get(token)
-
-	if userId == nil {
+	tokenClaims, err := ParseToken(token)
+	if err != nil || tokenClaims == nil {
 		c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "未登录或登陆过期，请先登录"})
 		return
 	}
 
-	userVo, err := service.GetUserInfoById(userId.(int64))
+	userId := tokenClaims.UserId
+
+	userVo, err := service.GetUserInfoById(userId)
 	if err != nil {
 		c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "用户不存在"})
 		return

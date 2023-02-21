@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
-	"github.com/gin-contrib/sessions"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -74,18 +75,48 @@ type UserLoginResponse struct {
 	Token      string `json:"token"`
 }
 
+type Claims struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	UserId   int64  `json:"user_id"`
+	jwt.StandardClaims
+}
+
+func GenerateToken(username string, password string, userId int64) (string, error) {
+	expireTime := time.Now().Add(time.Hour)
+
+	claims := Claims{
+		Username: username,
+		Password: password,
+		UserId:   userId,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expireTime.Unix(),
+		},
+	}
+
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenClaims.SignedString([]byte("setting.JwtSecret"))
+	return token, err
+}
+
+func ParseToken(token string) (*Claims, error) {
+	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte("setting.JwtSecret"), nil
+	})
+	if err != nil || tokenClaims == nil {
+		return nil, err
+	}
+
+	if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid {
+		return claims, nil
+	} else {
+		return nil, fmt.Errorf("token校验失败")
+	}
+}
+
 func Register(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-
-	token, err := service.EncryptPassword(username + password)
-	if err != nil || token == "" {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			StatusCode: 1,
-			StatusMsg:  "Failed to create token",
-		})
-		return
-	}
 
 	if _, err := service.GetUserInfoByName(username); err == nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
@@ -101,13 +132,14 @@ func Register(c *gin.Context) {
 			StatusMsg:  "Failed to create account",
 		})
 	} else {
-		session := sessions.Default(c)
-		session.Options(sessions.Options{
-			Path:   "/",
-			MaxAge: int(3600),
-		})
-		session.Set(token, userVo.Id)
-		session.Save()
+		token, err := GenerateToken(username, password, userVo.Id)
+		if err != nil || token == "" {
+			c.JSON(http.StatusOK, UserLoginResponse{
+				StatusCode: 1,
+				StatusMsg:  "Failed to create token",
+			})
+			return
+		}
 		c.JSON(http.StatusOK, UserLoginResponse{
 			StatusCode: 0,
 			UserId:     userVo.Id,
@@ -119,15 +151,6 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
-
-	token, err := service.EncryptPassword(username + password)
-	if err != nil || token == "" {
-		c.JSON(http.StatusOK, UserLoginResponse{
-			StatusCode: 1,
-			StatusMsg:  "Failed to create token",
-		})
-		return
-	}
 
 	if err := service.VerifyAccount(username, password); err != nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
@@ -143,14 +166,14 @@ func Login(c *gin.Context) {
 			StatusMsg:  "Failed to login",
 		})
 	} else {
-		session := sessions.Default(c)
-		session.Options(sessions.Options{
-			Path:   "/",
-			MaxAge: int(3600),
-		})
-		session.Set(token, userVo.Id)
-		fmt.Println(session.Get(token))
-		session.Save()
+		token, err := GenerateToken(username, password, userVo.Id)
+		if err != nil || token == "" {
+			c.JSON(http.StatusOK, UserLoginResponse{
+				StatusCode: 1,
+				StatusMsg:  "Failed to create token",
+			})
+			return
+		}
 		c.JSON(http.StatusOK, UserLoginResponse{
 			StatusCode: 0,
 			UserId:     userVo.Id,
@@ -160,15 +183,10 @@ func Login(c *gin.Context) {
 }
 
 func UserInfo(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Query("user_id"), 10, 64)
+	id, _ := strconv.ParseInt(c.Query("user_id"), 10, 64)
 	token := c.Query("token")
-	session := sessions.Default(c)
-	session.Options(sessions.Options{
-		Path:   "/",
-		MaxAge: int(3600),
-	})
-	flag := session.Get(token)
-	if err != nil || flag == nil {
+	tokenClaims, err := ParseToken(token)
+	if err != nil || tokenClaims == nil {
 		c.JSON(http.StatusOK, UserResponse{
 			StatusCode: 1,
 			StatusMsg:  "Cannot parse user_id or token",
@@ -197,13 +215,17 @@ type FavoriteActionResponse struct {
 // FavoriteAction 赞操作
 func FavoriteAction(c *gin.Context) {
 
-	videoId, _ := strconv.ParseInt(c.PostForm("video_id"), 10, 64)
-	actionType, _ := strconv.ParseInt(c.PostForm("action_type"), 10, 32)
-	token := c.PostForm("token")
+	videoId, _ := strconv.ParseInt(c.Query("video_id"), 10, 64)
+	actionType, _ := strconv.ParseInt(c.Query("action_type"), 10, 32)
+	token := c.Query("token")
 
-	session := sessions.Default(c)
+	tokenClaims, err := ParseToken(token)
+	if err != nil || tokenClaims == nil {
+		c.JSON(http.StatusOK, FavoriteActionResponse{1, "操作失败"})
+		return
+	}
 
-	userId := session.Get(token).(int64)
+	userId := tokenClaims.UserId
 
 	service.FavoriteAction(userId, videoId, int32(actionType))
 	c.JSON(200, FavoriteActionResponse{0, "成功操作"})
