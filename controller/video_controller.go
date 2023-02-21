@@ -46,7 +46,7 @@ func PublishAction(c *gin.Context) {
 	}
 
 	// 把文件写入对应位置
-	err = c.SaveUploadedFile(file, "./static/"+file.Filename)
+	err = c.SaveUploadedFile(file, "./public/"+file.Filename)
 	if err != nil {
 		c.JSON(500, &PublishActionResponse{StatusCode: 1, StatusMsg: "视频保存有问题"})
 		return
@@ -54,7 +54,7 @@ func PublishAction(c *gin.Context) {
 
 	// 调用 service 把视频信息保存到数据库
 	var video entity.Video
-	video.PlayUrl = "./static/" + file.Filename
+	video.PlayUrl = "http://192.168.1.244:8080/static/" + file.Filename
 	video.Title = c.PostForm("title")
 	video.CoverUrl = "www.picture.com"
 
