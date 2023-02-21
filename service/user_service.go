@@ -26,7 +26,7 @@ func CreateUser(username string, password string) (*entity.UserVo, error) {
 		return nil, err
 	}
 	user := &entity.User{Id: id, Name: username, Password: encryptedPassword}
-	if err := repository.NewUserDaoInstance().CreateUser(user); err != nil {
+	if err := repository.NewUserDaoInstance().CreateUser(user); err != nil || user == nil {
 		return nil, err
 	} else {
 		userVo := user2Vo(user)
@@ -51,8 +51,12 @@ func VerifyAccount(username string, password string) error {
 
 func GetUserInfoById(id int64) (*entity.UserVo, error) {
 	user, err := repository.NewUserDaoInstance().GetUserInfoById(id)
-	userVo := user2Vo(user)
-	return userVo, err
+	if err != nil || user == nil {
+		return nil, err
+	} else {
+		userVo := user2Vo(user)
+		return userVo, err
+	}
 }
 
 func GetUserInfoByName(username string) (*entity.UserVo, error) {
