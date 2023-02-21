@@ -43,12 +43,11 @@ func Feed(latestTime int64) ([]entity.VideoVo, int64, error) {
 }
 
 func video2Vo(video *entity.Video) *entity.VideoVo {
-	user, err := GetUserInfoById(video.AuthorId)
-	if err != nil || user == nil {
+	userVo, err := GetUserInfoById(video.AuthorId)
+	if err != nil || userVo == nil {
 		fmt.Print(err)
 		return nil
 	}
-	userVo := user2Vo(user)
 	v := entity.VideoVo{
 		Id:            video.Id,
 		Author:        *userVo,
@@ -60,9 +59,4 @@ func video2Vo(video *entity.Video) *entity.VideoVo {
 		Title:         video.Title,
 	}
 	return &v
-}
-
-func user2Vo(user *entity.User) *entity.UserVo {
-	userVo := &entity.UserVo{Id: user.Id, Name: user.Name, FollowCount: 0, FollowerCount: 0, IsFollow: false}
-	return userVo
 }

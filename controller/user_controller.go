@@ -62,9 +62,9 @@ type FavoriteListResponse struct {
 // Yimin code
 
 type UserResponse struct {
-	StatusCode int32       `json:"status_code"`
-	StatusMsg  string      `json:"status_msg"`
-	User       entity.User `json:"user"`
+	StatusCode int32         `json:"status_code"`
+	StatusMsg  string        `json:"status_msg"`
+	User       entity.UserVo `json:"user"`
 }
 
 type UserLoginResponse struct {
@@ -137,7 +137,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	if user, err := service.GetUserInfoByName(username); err != nil || user == nil {
+	if userVo, err := service.GetUserInfoByName(username); err != nil || userVo == nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			StatusCode: 1,
 			StatusMsg:  "Failed to login",
@@ -148,12 +148,12 @@ func Login(c *gin.Context) {
 			Path:   "/",
 			MaxAge: int(3600),
 		})
-		session.Set(token, user)
+		session.Set(token, userVo)
 		fmt.Println(session.Get(token))
 		session.Save()
 		c.JSON(http.StatusOK, UserLoginResponse{
 			StatusCode: 0,
-			UserId:     user.Id,
+			UserId:     userVo.Id,
 			Token:      token,
 		})
 	}
@@ -178,7 +178,7 @@ func UserInfo(c *gin.Context) {
 		return
 	}
 
-	if user, err := service.GetUserInfoById(id); err != nil || user == nil {
+	if userVo, err := service.GetUserInfoById(id); err != nil || userVo == nil {
 		c.JSON(http.StatusOK, UserResponse{
 			StatusCode: 1,
 			StatusMsg:  "User doesn't exist",
@@ -186,7 +186,7 @@ func UserInfo(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, UserResponse{
 			StatusCode: 0,
-			User:       *user,
+			User:       *userVo,
 		})
 	}
 }

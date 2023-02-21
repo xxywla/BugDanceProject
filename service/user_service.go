@@ -4,6 +4,7 @@ import (
 	"douyinapp/entity"
 	"douyinapp/repository"
 	"fmt"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -13,7 +14,7 @@ func UserInfo(userId int64) (entity.User, error) {
 
 // Yimin code
 // create user info and set authentication
-func CreateUser(username string, password string) (*entity.User, error) {
+func CreateUser(username string, password string) (*entity.UserVo, error) {
 	node, err := NewWorker(1)
 	if err != nil {
 		fmt.Printf("Failed to generate id: %s", err)
@@ -28,13 +29,14 @@ func CreateUser(username string, password string) (*entity.User, error) {
 	if err := repository.NewUserDaoInstance().CreateUser(user); err != nil {
 		return nil, err
 	} else {
-		return user, nil
+		userVo := user2Vo(user)
+		return userVo, nil
 	}
 }
 
 // verify username and password
 func VerifyAccount(username string, password string) error {
-	user, err := GetUserInfoByName(username)
+	user, err := repository.NewUserDaoInstance().GetUserInfoByName(username)
 	if err != nil {
 		fmt.Printf("No User Found: %s", err)
 		return err
@@ -47,12 +49,16 @@ func VerifyAccount(username string, password string) error {
 	return nil
 }
 
-func GetUserInfoById(id int64) (*entity.User, error) {
-	return repository.NewUserDaoInstance().GetUserInfoById(id)
+func GetUserInfoById(id int64) (*entity.UserVo, error) {
+	user, err := repository.NewUserDaoInstance().GetUserInfoById(id)
+	userVo := user2Vo(user)
+	return userVo, err
 }
 
-func GetUserInfoByName(username string) (*entity.User, error) {
-	return repository.NewUserDaoInstance().GetUserInfoByName(username)
+func GetUserInfoByName(username string) (*entity.UserVo, error) {
+	user, err := repository.NewUserDaoInstance().GetUserInfoByName(username)
+	userVo := user2Vo(user)
+	return userVo, err
 }
 
 func EncryptPassword(password string) (string, error) {
@@ -62,4 +68,9 @@ func EncryptPassword(password string) (string, error) {
 		return "", err
 	}
 	return string(hash), nil
+}
+
+func user2Vo(user *entity.User) *entity.UserVo {
+	userVo := &entity.UserVo{Id: user.Id, Name: user.Name, FollowCount: 0, FollowerCount: 0, IsFollow: false}
+	return userVo
 }

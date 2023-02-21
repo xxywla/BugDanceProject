@@ -17,9 +17,9 @@ type CommentListResponse struct {
 }
 
 type CommentActionResponse struct {
-	StatusCode int32          `json:"status_code"`
-	StatusMsg  string         `json:"status_msg"`
-	Comment    entity.Comment `json:"comment,omitempty"`
+	StatusCode int32            `json:"status_code"`
+	StatusMsg  string           `json:"status_msg"`
+	Comment    entity.CommentVo `json:"comment,omitempty"`
 }
 
 // CommentAction no practical effect, just check if token is valid

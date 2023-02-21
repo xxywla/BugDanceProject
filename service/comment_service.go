@@ -13,16 +13,17 @@ func CommentList(userId int64) ([]*entity.Comment, error) {
 }
 
 // 保存评论
-func SaveComment(videoId int64, user entity.User, commentText string) (*entity.Comment, error) {
+func SaveComment(videoId int64, user entity.User, commentText string) (*entity.CommentVo, error) {
 	createDate := time.Now().Format("01-02")
 	comment := &entity.Comment{VideoId: videoId, UserId: user.Id, Content: commentText, CreateDate: createDate}
 
 	comment, err := repository.NewCommentDaoInstance().AddComment(comment)
+	commentVo := entity.CommentVo{Id: comment.Id}
 	if err != nil {
 		fmt.Printf("保存评论失败: %s", err)
 		return nil, err
 	}
-	return comment, nil
+	return &commentVo, nil
 }
 
 // 删除评论
