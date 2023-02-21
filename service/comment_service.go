@@ -7,9 +7,20 @@ import (
 	"time"
 )
 
-// CommentList 获取指定用户发布的视频列表
-func CommentList(userId int64) ([]*entity.Comment, error) {
-	return repository.NewCommentDaoInstance().CommentList(userId), nil
+// 获取当前视频的评论列表
+func CommentList(videoId int64) ([]entity.CommentVo, error) {
+	commentList, err := repository.NewCommentDaoInstance().CommentList(videoId)
+	if err != nil {
+		return nil, err
+	}
+	commentVoList := make([]entity.CommentVo, 0)
+	for _, comment := range commentList {
+		commentVo := comment2Vo(&comment)
+		if commentVo != nil {
+			commentVoList = append(commentVoList, *commentVo)
+		}
+	}
+	return commentVoList, nil
 }
 
 // 保存评论
@@ -31,4 +42,19 @@ func SaveComment(videoId int64, user entity.User, commentText string) (*entity.C
 func DeleteComment(commentId int64) error {
 	err := repository.NewCommentDaoInstance().DeleteComment(commentId)
 	return err
+}
+
+func comment2Vo(comment *entity.Comment) *entity.CommentVo {
+	userVo, err := GetUserInfoById(comment.UserId)
+	if err != nil || userVo == nil {
+		fmt.Print(err)
+		return nil
+	}
+	commentVo := entity.CommentVo{
+		Id:         comment.Id,
+		User:       *userVo,
+		Content:    comment.Content,
+		CreateDate: comment.CreateDate,
+	}
+	return &commentVo
 }

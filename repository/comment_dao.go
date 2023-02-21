@@ -42,9 +42,11 @@ func (*CommentDao) DeleteComment(commentId int64) error {
 	return err
 }
 
-// CommentList 根据用户Id获取该用户评论的所有视频Id
-func (*CommentDao) CommentList(userId int64) []*entity.Comment {
-	commentList := make([]*entity.Comment, 0)
-	db.Where("user_id = ?", userId).Find(&commentList)
-	return commentList
+// 根据video id获取该视频的所有评论，按发布时间倒序
+func (*CommentDao) CommentList(userId int64) ([]entity.Comment, error) {
+	commentList := make([]entity.Comment, 0)
+	if err := db.Order("create_date desc").Find(&commentList).Error; err != nil {
+		return nil, err
+	}
+	return commentList, nil
 }

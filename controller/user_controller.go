@@ -95,7 +95,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	if user, err := service.CreateUser(username, password); err != nil || user == nil {
+	if userVo, err := service.CreateUser(username, password); err != nil || userVo == nil {
 		c.JSON(http.StatusOK, UserLoginResponse{
 			StatusCode: 1,
 			StatusMsg:  "Failed to create account",
@@ -106,11 +106,11 @@ func Register(c *gin.Context) {
 			Path:   "/",
 			MaxAge: int(3600),
 		})
-		session.Set(token, user)
+		session.Set(token, userVo)
 		session.Save()
 		c.JSON(http.StatusOK, UserLoginResponse{
 			StatusCode: 0,
-			UserId:     user.Id,
+			UserId:     userVo.Id,
 			Token:      token,
 		})
 	}

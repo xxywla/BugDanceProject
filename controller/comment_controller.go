@@ -3,6 +3,7 @@ package controller
 import (
 	"douyinapp/entity"
 	"douyinapp/service"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -11,9 +12,9 @@ import (
 )
 
 type CommentListResponse struct {
-	StatusCode  int32             `json:"status_code"`
-	StatusMsg   string            `json:"status_msg"`
-	CommentList []*entity.Comment `json:"comment_list,omitempty"`
+	StatusCode  int32              `json:"status_code"`
+	StatusMsg   string             `json:"status_msg"`
+	CommentList []entity.CommentVo `json:"comment_list,omitempty"`
 }
 
 type CommentActionResponse struct {
@@ -24,7 +25,7 @@ type CommentActionResponse struct {
 
 // CommentAction no practical effect, just check if token is valid
 func CommentAction(c *gin.Context) {
-	token := c.PostForm("token")
+	token := c.Query("token")
 
 	userDemo := entity.User{Id: 1,
 		Name:     "zhanglei",
@@ -41,10 +42,11 @@ func CommentAction(c *gin.Context) {
 		return
 	}
 
-	actionType := c.PostForm("action_type")
+	actionType := c.Query("action_type")
+	fmt.Println(actionType)
 	if actionType == "1" {
-		videoId, _ := strconv.ParseInt(c.PostForm("video_id"), 10, 64)
-		commentText := c.PostForm("comment_text")
+		videoId, _ := strconv.ParseInt(c.Query("video_id"), 10, 64)
+		commentText := c.Query("comment_text")
 		commentVo, err := service.SaveComment(videoId, user.(entity.User), commentText)
 		if err != nil {
 			c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "评论失败"})
@@ -56,7 +58,7 @@ func CommentAction(c *gin.Context) {
 		return
 	} else {
 		if actionType == "2" {
-			commentId, _ := strconv.ParseInt(c.PostForm("comment_id"), 10, 64)
+			commentId, _ := strconv.ParseInt(c.Query("comment_id"), 10, 64)
 			err := service.DeleteComment(commentId)
 			if err != nil {
 				c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "删除评论失败"})
@@ -72,11 +74,18 @@ func CommentAction(c *gin.Context) {
 }
 
 // CommentList all videos have same demo comment list
-func CommentList(videoId int64) *CommentListResponse {
-	commentList, _ := service.CommentList(videoId)
-	return &CommentListResponse{
-		StatusCode:  0,
-		StatusMsg:   "查询成功",
-		CommentList: commentList,
+func CommentList(c *gin.Context) {
+	videoId, _ := strconv.ParseInt(c.Query("video_id"), 10, 64)
+	commentList, err := service.CommentList(videoId)
+	if err != nil {
+		c.JSON(http.StatusOK, CommentListResponse{
+			StatusCode: 1,
+			StatusMsg:  "无法获取评论",
+		})
+	} else {
+		c.JSON(http.StatusOK, CommentListResponse{
+			StatusCode:  0,
+			CommentList: commentList,
+		})
 	}
 }
