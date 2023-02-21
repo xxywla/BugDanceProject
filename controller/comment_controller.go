@@ -27,10 +27,16 @@ type CommentActionResponse struct {
 func CommentAction(c *gin.Context) {
 	token := c.Query("token")
 	session := sessions.Default(c)
-	user := session.Get(token)
+	userId := session.Get(token)
 
-	if user == nil {
+	if userId == nil {
 		c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "未登录或登陆过期，请先登录"})
+		return
+	}
+
+	user, err := service.GetUserInfoById(userId.(int64))
+	if err != nil {
+		c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "用户不存在"})
 		return
 	}
 
