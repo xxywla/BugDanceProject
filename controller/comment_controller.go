@@ -26,15 +26,7 @@ type CommentActionResponse struct {
 // CommentAction no practical effect, just check if token is valid
 func CommentAction(c *gin.Context) {
 	token := c.Query("token")
-
-	userDemo := entity.User{Id: 1,
-		Name:     "zhanglei",
-		Password: "",
-		Avatar:   ""}
-
 	session := sessions.Default(c)
-	session.Set(token, userDemo)
-	session.Save()
 	user := session.Get(token)
 
 	if user == nil {
