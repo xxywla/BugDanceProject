@@ -21,10 +21,14 @@ func NewVideoDaoInstance() *VideoDao {
 }
 
 // QueryVideoListById 根据用户Id获取用户上传的视频列表
-func (*VideoDao) QueryVideoListById(userId int64) ([]*entity.Video, error) {
+func (*VideoDao) QueryVideoListById(userId int64) []int64 {
 	videoList := make([]*entity.Video, 0)
 	db.Where("author_id = ?", userId).Find(&videoList)
-	return videoList, nil
+	videoIdList := make([]int64, 0)
+	for _, video := range videoList {
+		videoIdList = append(videoIdList, video.Id)
+	}
+	return videoIdList
 }
 
 // QueryVideoById 根据视频Id获取视频信息

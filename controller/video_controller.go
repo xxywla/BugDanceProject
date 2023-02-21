@@ -11,20 +11,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//type PublishListResponse struct {
-//	StatusCode int32           `json:"status_code"`
-//	StatusMsg  string          `json:"status_msg"`
-//	VideoList  []*entity.Video `json:"video_list"`
-//}
-//
-//func PublishList(userId int64, token string) *PublishListResponse {
-//	publishList, _ := service.PublishList(userId, token)
-//	return &PublishListResponse{
-//		StatusCode: 0,
-//		StatusMsg:  "查询成功",
-//		VideoList:  publishList,
-//	}
-//}
+type PublishListResponse struct {
+	StatusCode int32            `json:"status_code"`
+	StatusMsg  string           `json:"status_msg"`
+	VideoList  []entity.VideoVo `json:"video_list"`
+}
+
+func PublishList(c *gin.Context) {
+
+	//token := c.Query("token")
+	userId, _ := strconv.ParseInt(c.Query("user_id"), 10, 64)
+
+	publishList := service.PublishList(userId)
+	c.JSON(200, PublishListResponse{
+		StatusCode: 0,
+		StatusMsg:  "查询成功",
+		VideoList:  publishList,
+	})
+}
 
 type PublishActionResponse struct {
 	StatusCode int32  `json:"status_code"`
@@ -74,34 +78,11 @@ func PublishAction(c *gin.Context) {
 
 // Yimin code
 
-type PublishListResponse struct {
-	StatusCode int32           `json:"status_code"`
-	StatusMsg  string          `json:"status_msg"`
-	VideoList  []*entity.Video `json:"video_list"`
-}
-
 type FeedResponse struct {
 	StatusCode int32            `json:"status_code"`
 	StatusMsg  string           `json:"status_msg,omitempty"`
 	VideoList  []entity.VideoVo `json:"video_list,omitempty"`
 	NextTime   int64            `json:"next_time,omitempty"`
-}
-
-//	func PublishList(userId int64, token string) *PublishListResponse {
-//		publishList, _ := service.PublishList(userId, token)
-//		return &PublishListResponse{
-//			StatusCode: 0,
-//			StatusMsg:  "查询成功",
-//			VideoList:  publishList,
-//		}
-//	}
-func PublishList(c *gin.Context) {
-	c.JSON(http.StatusOK, PublishListResponse{
-		StatusCode: 0,
-		StatusMsg:  "查询成功",
-		VideoList:  nil,
-	},
-	)
 }
 
 func Feed(c *gin.Context) {
