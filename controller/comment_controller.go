@@ -34,7 +34,7 @@ func CommentAction(c *gin.Context) {
 		return
 	}
 
-	user, err := service.GetUserInfoById(userId.(int64))
+	userVo, err := service.GetUserInfoById(userId.(int64))
 	if err != nil {
 		c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "用户不存在"})
 		return
@@ -45,7 +45,7 @@ func CommentAction(c *gin.Context) {
 	if actionType == "1" {
 		videoId, _ := strconv.ParseInt(c.Query("video_id"), 10, 64)
 		commentText := c.Query("comment_text")
-		commentVo, err := service.SaveComment(videoId, user.(entity.User), commentText)
+		commentVo, err := service.SaveComment(videoId, userVo, commentText)
 		if err != nil {
 			c.JSON(http.StatusOK, CommentActionResponse{StatusCode: 1, StatusMsg: "评论失败"})
 			return
