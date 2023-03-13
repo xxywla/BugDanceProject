@@ -28,12 +28,12 @@ func (*CommentDao) QueryVideoCommentCount(videoId int64) int64 {
 }
 
 // AddComment 评论表添加一项数据
-func (*CommentDao) AddComment(comment *entity.Comment) (*entity.Comment, error) {
+func (*CommentDao) AddComment(comment *entity.Comment) error {
 	err := db.Create(comment).Error
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return comment, nil
+	return nil
 }
 
 // DeleteComment 在评论表删除一条数据

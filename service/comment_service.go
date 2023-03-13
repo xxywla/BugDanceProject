@@ -3,6 +3,7 @@ package service
 import (
 	"douyinapp/entity"
 	"douyinapp/repository"
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -27,15 +28,27 @@ func CommentList(videoId int64) ([]entity.CommentVo, error) {
 func SaveComment(videoId int64, userVo *entity.UserVo, commentText string) (*entity.CommentVo, error) {
 	createDate := time.Now().Format("01-02")
 	comment := &entity.Comment{VideoId: videoId, UserId: userVo.Id, Content: commentText, CreateDate: createDate}
-
-	comment, err := repository.NewCommentDaoInstance().AddComment(comment)
-	commentVo := entity.CommentVo{Id: comment.Id, User: *userVo, Content: commentText, CreateDate: createDate}
+	data, err := json.Marshal((comment))
 	if err != nil {
-		fmt.Printf("保存评论失败: %s", err)
 		return nil, err
 	}
-	return &commentVo, nil
+	NewProducer().ProduceComment(string(data))
+	commentVo := &entity.CommentVo{Id: comment.Id, User: *userVo, Content: commentText, CreateDate: createDate}
+	return commentVo, nil
 }
+
+// func SaveComment(videoId int64, userVo *entity.UserVo, commentText string) (*entity.CommentVo, error) {
+// 	createDate := time.Now().Format("01-02")
+// 	comment := &entity.Comment{VideoId: videoId, UserId: userVo.Id, Content: commentText, CreateDate: createDate}
+
+// 	comment, err := repository.NewCommentDaoInstance().AddComment(comment)
+// 	commentVo := entity.CommentVo{Id: comment.Id, User: *userVo, Content: commentText, CreateDate: createDate}
+// 	if err != nil {
+// 		fmt.Printf("保存评论失败: %s", err)
+// 		return nil, err
+// 	}
+// 	return &commentVo, nil
+// }
 
 // 删除评论
 func DeleteComment(commentId int64) error {
